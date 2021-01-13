@@ -25,8 +25,21 @@ const validateReview = [
 
 articlesRouter.get("/", async (req, res, next) => {
   try {
-    const articles = await ArticlesModel.find();
-    res.send(articles);
+    // const articles = await ArticlesModel.find();
+    // res.send(articles);
+    const query = q2m(req.query);
+    const total = await ArticlesModel.countDocuments(query.criteria);
+    const articles = await ArticlesModel.find(
+      query.criteria,
+      query.optionsfields
+    )
+      .skip(query.options.skip)
+      .limit(query.options.limit)
+      .sort(query.options.sort);
+    res.send({
+      links: query.links(`/articles`, total),
+      articles,
+    });
   } catch (error) {
     next(error);
   }
