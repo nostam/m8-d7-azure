@@ -1,8 +1,10 @@
 const express = require("express");
 const articlesRouter = express.Router();
+const { body, validationResult } = require("express-validator");
+const q2m = require("query-to-mongo");
+
 const ArticlesModel = require("../../model/articles");
 const ReviewsModel = require("../../model/reviews");
-const { param, body, validationResult } = require("express-validator");
 const { err } = require("../../lib");
 
 const validateArticle = [
@@ -33,7 +35,6 @@ articlesRouter.get("/", async (req, res, next) => {
 articlesRouter.get("/:id", async (req, res, next) => {
   try {
     const article = await ArticlesModel.findById(req.params.id);
-    // if (!article) return next(err(`${req.params.id} not found`, 404));
     res.send(article);
   } catch (error) {
     next(error);
@@ -42,8 +43,19 @@ articlesRouter.get("/:id", async (req, res, next) => {
 
 articlesRouter.get("/:id/reviews", async (req, res, next) => {
   try {
-    const reviews = await ReviewsModel.find({ articleId: req.params.id });
-    res.send(reviews);
+    const query = q2m(req.query);
+    const total = await ReviewsModel.countDocuments(query.criteria);
+    const reviews = await ReviewsModel.find(
+      { articleId: req.params.id },
+      query.optionsfields
+    )
+      .skip(query.options.skip)
+      .limit(query.options.limit)
+      .sort(query.options.sort);
+    res.send({
+      links: query.links(`/articles/${req.params.id}/reviews`, total),
+      reviews,
+    });
   } catch (error) {
     next(error);
   }
@@ -79,7 +91,7 @@ articlesRouter.post("/:id", validateReview, async (req, res, next) => {
     if (!errors.isEmpty()) return next(err(errors.array(), 400));
     const newReview = new ReviewsModel({
       ...req.body,
-      articleID: req.params.id,
+      articleId: req.params.id,
     });
     const { _id } = await newReview.save();
     res.status(201).send(_id);
@@ -111,10 +123,9 @@ articlesRouter.put(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return next(err(errors.array(), 400));
-      console.log(await ReviewsModel.findById(req.params.reviewID));
       const review = await ReviewsModel.findByIdAndUpdate(
         req.params.reviewID,
-        req.body,
+        { ...req.body, articleId: req.params.id },
         { runValidators: true, new: true }
       );
       res.send(review);
