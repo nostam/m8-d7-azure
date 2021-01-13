@@ -19,7 +19,6 @@ const validateArticle = [
 const validateReview = [
   body("text").isString(),
   body("user").notEmpty().isString(),
-  // param("id").isMongoId(),
 ];
 
 articlesRouter.get("/", async (req, res, next) => {
@@ -124,10 +123,20 @@ articlesRouter.put(
     }
   }
 );
+
 articlesRouter.delete("/:id", async (req, res, next) => {
   try {
-    const articles = await ArticlesModel.findByIdAndDelete(req.params.id);
-    // if (!articles) return next(err(`${req.params.id} not found`, 404));
+    const article = await ArticlesModel.findByIdAndDelete(req.params.id);
+    // if (!article) return next(err(`${req.params.id} not found`, 404));
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+articlesRouter.delete("/:id/reviews/:reviewID", async (req, res, next) => {
+  try {
+    const review = await ReviewsModel.findByIdAndDelete(req.params.reviewID);
     res.status(204).send();
   } catch (error) {
     next(error);
