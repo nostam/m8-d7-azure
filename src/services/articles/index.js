@@ -28,6 +28,7 @@ articlesRouter.get("/", async (req, res, next) => {
     const total = await ArticleModel.countDocuments(query.criteria);
     const articles = await ArticleModel.find(
       query.criteria,
+      { reviews: 0 },
       query.optionsfields
     )
       .skip(query.options.skip)
