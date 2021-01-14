@@ -3,7 +3,7 @@ const articlesRouter = express.Router();
 const { body, validationResult } = require("express-validator");
 const q2m = require("query-to-mongo");
 
-const ArticlesModel = require("../../model/articles");
+const ArticleModel = require("../../model/articles");
 const { err } = require("../../lib");
 
 const validateArticle = [
@@ -25,8 +25,8 @@ const validateReview = [
 articlesRouter.get("/", async (req, res, next) => {
   try {
     const query = q2m(req.query);
-    const total = await ArticlesModel.countDocuments(query.criteria);
-    const articles = await ArticlesModel.find(
+    const total = await ArticleModel.countDocuments(query.criteria);
+    const articles = await ArticleModel.find(
       query.criteria,
       query.optionsfields
     )
@@ -44,7 +44,7 @@ articlesRouter.get("/", async (req, res, next) => {
 
 articlesRouter.get("/:id", async (req, res, next) => {
   try {
-    const article = await ArticlesModel.findById(req.params.id);
+    const article = await ArticleModel.findById(req.params.id);
     res.send(article);
   } catch (error) {
     next(error);
@@ -54,14 +54,19 @@ articlesRouter.get("/:id", async (req, res, next) => {
 articlesRouter.get("/:id/reviews", async (req, res, next) => {
   try {
     const query = q2m(req.query);
-    const total = await ReviewsModel.countDocuments(query.criteria);
-    const reviews = await ReviewsModel.find(
-      { articleId: req.params.id },
+    const total = await ArticleModel.findById(req.params.id, {
+      _id: 0,
+      reviews: 1,
+    }).countDocuments(query.criteria);
+    const reviews = await ArticleModel.findOne(
+      { _id: req.params.id },
+      { reviews: 1 },
       query.optionsfields
     )
       .skip(query.options.skip)
       .limit(query.options.limit)
       .sort(query.options.sort);
+    console.log(total);
     res.send({
       links: query.links(`/articles/${req.params.id}/reviews`, total),
       reviews,
@@ -73,7 +78,7 @@ articlesRouter.get("/:id/reviews", async (req, res, next) => {
 
 articlesRouter.get("/:id/reviews/:reviewId", async (req, res, next) => {
   try {
-    const review = await ArticlesModel.getReviewByReviewId(
+    const review = await ArticleModel.getReviewByReviewId(
       req.params.id,
       req.params.reviewId
     );
@@ -87,7 +92,7 @@ articlesRouter.post("/", validateArticle, async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return next(err(errors.array(), 400));
-    const newPost = new ArticlesModel(req.body, {
+    const newPost = new ArticleModel(req.body, {
       runValidators: true,
       new: true,
     });
@@ -102,7 +107,7 @@ articlesRouter.post("/:id", validateReview, async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return next(err(errors.array(), 400));
-    const updatedArticle = await ArticlesModel.findByIdAndUpdate(
+    const updatedArticle = await ArticleModel.findByIdAndUpdate(
       req.params.id,
       { $push: { reviews: req.body } },
       { runValidators: true, new: true }
@@ -119,7 +124,7 @@ articlesRouter.put("/:id", validateArticle, async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return next(err(errors.array(), 400));
 
-    const article = await ArticlesModel.findByIdAndUpdate(
+    const article = await ArticleModel.findByIdAndUpdate(
       req.params.id,
       req.body,
       { runValidators: true, new: true }
@@ -137,12 +142,12 @@ articlesRouter.put(
       const errors = validationResult(req);
       if (!errors.isEmpty()) return next(err(errors.array(), 400));
       const { articleId, reviewId } = req.params;
-      const review = await ArticlesModel.getReviewByReviewId(
+      const review = await ArticleModel.getReviewByReviewId(
         articleId,
         reviewId
       );
       const modifiedReview = { ...review.toObject(), ...req.body };
-      const updatedReview = await ArticlesModel.findOneAndUpdate(
+      const updatedReview = await ArticleModel.findOneAndUpdate(
         { _id: articleId, "reviews._id": reviewId },
         { $set: { "reviews.$": modifiedReview } },
         { runValidators: true, new: true }
@@ -156,7 +161,7 @@ articlesRouter.put(
 
 articlesRouter.delete("/:id", async (req, res, next) => {
   try {
-    const article = await ArticlesModel.findByIdAndDelete(req.params.id);
+    const article = await ArticleModel.findByIdAndDelete(req.params.id);
     res.status(204).send();
   } catch (error) {
     next(error);
@@ -165,7 +170,7 @@ articlesRouter.delete("/:id", async (req, res, next) => {
 
 articlesRouter.delete("/:id/reviews/:reviewId", async (req, res, next) => {
   try {
-    const modifiedReview = await ArticlesModel.findByIdAndUpdate(
+    const modifiedReview = await ArticleModel.findByIdAndUpdate(
       req.params.id,
       {
         $pull: {

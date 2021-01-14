@@ -1,6 +1,6 @@
 const { Schema, model } = require("mongoose");
 
-const ArticlesSchema = new Schema(
+const ArticleSchema = new Schema(
   {
     headLine: { type: String, required: true },
     subHead: "string",
@@ -9,10 +9,7 @@ const ArticlesSchema = new Schema(
       name: "string",
       img: "string",
     },
-    author: {
-      name: "string",
-      img: "string",
-    },
+    author: [{ type: Schema.Types.ObjectId, ref: "users" }],
     cover: "string",
     reviews: [
       { text: { type: String }, user: { type: String } },
@@ -22,7 +19,7 @@ const ArticlesSchema = new Schema(
   { timestamps: true }
 );
 
-ArticlesSchema.static(
+ArticleSchema.static(
   "getReviewByReviewId",
   async function (articleId, reviewId) {
     const reviews = await this.findById(articleId, {
@@ -33,5 +30,5 @@ ArticlesSchema.static(
   }
 );
 
-const ArticlesModel = model("articles", ArticlesSchema);
-module.exports = ArticlesModel;
+const ArticleModel = model("articles", ArticleSchema);
+module.exports = ArticleModel;
