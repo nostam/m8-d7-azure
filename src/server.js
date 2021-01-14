@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const articlesRoute = require("./services/articles");
+const usersRoute = require("./services/users");
 const server = express();
 const port = process.env.PORT || 3001;
 const helmet = require("helmet");
@@ -39,6 +40,7 @@ server.use(express.json());
 server.use(loggerMiddleware);
 
 server.use("/articles", articlesRoute);
+server.use("/user", usersRoute);
 server.use(badRequestHandler);
 server.use(notFoundHandler);
 server.use(unauthorizedHandler);
