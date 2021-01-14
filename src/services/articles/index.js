@@ -4,7 +4,6 @@ const { body, validationResult } = require("express-validator");
 const q2m = require("query-to-mongo");
 
 const ArticlesModel = require("../../model/articles");
-const ReviewsModel = require("../../model/reviews");
 const { err } = require("../../lib");
 
 const validateArticle = [
@@ -72,12 +71,15 @@ articlesRouter.get("/:id/reviews", async (req, res, next) => {
   }
 });
 
-articlesRouter.get("/:id/reviews/:reviewID", async (req, res, next) => {
+articlesRouter.get("/:id/reviews/:reviewId", async (req, res, next) => {
   try {
-    const review = await ReviewsModel.findById(req.params.reviewId);
+    const review = await ArticlesModel.getReviewByReviewId(
+      req.params.id,
+      req.params.reviewId
+    );
     res.send(review);
   } catch (error) {
-    next(error);
+    next(err("article ID or review ID not found", 404));
   }
 });
 
@@ -100,11 +102,12 @@ articlesRouter.post("/:id", validateReview, async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return next(err(errors.array(), 400));
-    const newReview = new ReviewsModel({
-      ...req.body,
-      articleId: req.params.id,
-    });
-    const { _id } = await newReview.save();
+    const updatedArticle = await ArticlesModel.findByIdAndUpdate(
+      req.params.id,
+      { $push: { reviews: req.body } },
+      { runValidators: true, new: true }
+    );
+    const { _id } = await updatedArticle.save();
     res.status(201).send(_id);
   } catch (error) {
     next(error);
@@ -121,25 +124,30 @@ articlesRouter.put("/:id", validateArticle, async (req, res, next) => {
       req.body,
       { runValidators: true, new: true }
     );
-    if (!article) return next(err(`${req.params.id} not found`, 404));
     res.send(article);
   } catch (error) {
     next(error);
   }
 });
 articlesRouter.put(
-  "/:id/reviews/:reviewID",
+  "/:articleId/reviews/:reviewId",
   validateReview,
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return next(err(errors.array(), 400));
-      const review = await ReviewsModel.findByIdAndUpdate(
-        req.params.reviewID,
-        { ...req.body, articleId: req.params.id },
+      const { articleId, reviewId } = req.params;
+      const review = await ArticlesModel.getReviewByReviewId(
+        articleId,
+        reviewId
+      );
+      const modifiedReview = { ...review.toObject(), ...req.body };
+      const updatedReview = await ArticlesModel.findOneAndUpdate(
+        { _id: articleId, "reviews._id": reviewId },
+        { $set: { "reviews.$": modifiedReview } },
         { runValidators: true, new: true }
       );
-      res.send(review);
+      res.status(201).send(updatedReview);
     } catch (error) {
       next(error);
     }
@@ -149,17 +157,26 @@ articlesRouter.put(
 articlesRouter.delete("/:id", async (req, res, next) => {
   try {
     const article = await ArticlesModel.findByIdAndDelete(req.params.id);
-    // if (!article) return next(err(`${req.params.id} not found`, 404));
     res.status(204).send();
   } catch (error) {
     next(error);
   }
 });
 
-articlesRouter.delete("/:id/reviews/:reviewID", async (req, res, next) => {
+articlesRouter.delete("/:id/reviews/:reviewId", async (req, res, next) => {
   try {
-    const review = await ReviewsModel.findByIdAndDelete(req.params.reviewID);
-    res.status(204).send();
+    const modifiedReview = await ArticlesModel.findByIdAndUpdate(
+      req.params.id,
+      {
+        $pull: {
+          reviews: {
+            _id: req.params.reviewID,
+          },
+        },
+      },
+      { new: true }
+    );
+    res.status(204).send(modifiedReview);
   } catch (error) {
     next(error);
   }
