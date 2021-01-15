@@ -4,7 +4,7 @@ const { body, validationResult } = require("express-validator");
 const q2m = require("query-to-mongo");
 
 const ArticleModel = require("../../model/articles");
-const { err } = require("../../lib");
+const { err, mongoErr } = require("../../lib");
 
 const validateArticle = [
   body("headLine").notEmpty().isString(),
@@ -48,7 +48,7 @@ articlesRouter.get("/:id", async (req, res, next) => {
     const article = await ArticleModel.findById(req.params.id);
     res.send(article);
   } catch (error) {
-    next(error);
+    next(mongoErr(error));
   }
 });
 
@@ -67,7 +67,6 @@ articlesRouter.get("/:id/reviews", async (req, res, next) => {
       .skip(query.options.skip)
       .limit(query.options.limit)
       .sort(query.options.sort);
-    console.log(total);
     res.send({
       links: query.links(`/articles/${req.params.id}/reviews`, total),
       reviews,
@@ -93,10 +92,7 @@ articlesRouter.post("/", validateArticle, async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return next(err(errors.array(), 400));
-    const newPost = new ArticleModel(req.body, {
-      runValidators: true,
-      new: true,
-    });
+    const newPost = new ArticleModel(req.body);
     const { _id } = await newPost.save();
     res.status(201).send(_id);
   } catch (error) {
@@ -123,7 +119,7 @@ articlesRouter.post("/:id", validateReview, async (req, res, next) => {
 articlesRouter.put("/:id", validateArticle, async (req, res, next) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return next(err(errors.array(), 400));
+    if (!errors.isEmpty()) res.status(404).send(errors.array());
 
     const article = await ArticleModel.findByIdAndUpdate(
       req.params.id,

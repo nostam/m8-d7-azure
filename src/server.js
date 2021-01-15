@@ -40,7 +40,7 @@ server.use(express.json());
 server.use(loggerMiddleware);
 
 server.use("/articles", articlesRoute);
-server.use("/user", usersRoute);
+server.use("/users", usersRoute);
 server.use(badRequestHandler);
 server.use(notFoundHandler);
 server.use(unauthorizedHandler);
@@ -53,6 +53,7 @@ mongoose
   .connect(process.env.MONGO_CONNECTION, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    useFindAndModify: false,
   })
   .then(
     server.listen(port, () => {

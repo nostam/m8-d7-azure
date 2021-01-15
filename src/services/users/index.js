@@ -4,22 +4,27 @@ const { body, validationResult } = require("express-validator");
 const q2m = require("query-to-mongo");
 
 const UserModel = require("../../model/users");
-const { err } = require("../../lib");
+const { err, mongoErr } = require("../../lib");
 
-const validateUsers = [body("firstName").isAlpha(), body("lastName").isAlpha()];
+const validateUsers = [
+  body("firstName").isString(),
+  body("lastName").isString(),
+];
 
 usersRouter.get("/", async (req, res, next) => {
   try {
-    const query = q2m(req.query);
-    const total = await UserModel.countDocuments(query.criteria);
-    const articles = await UserModel.find(query.criteria, query.optionsfields)
-      .skip(query.options.skip)
-      .limit(query.options.limit)
-      .sort(query.options.sort);
-    res.send({
-      links: query.links(`/articles`, total),
-      articles,
-    });
+    // const query = q2m(req.query);
+    // const total = await UserModel.countDocuments(query.criteria);
+    // const articles = await UserModel.find(query.criteria, query.optionsfields)
+    //   .skip(query.options.skip)
+    //   .limit(query.options.limit)
+    //   .sort(query.options.sort);
+    // res.send({
+    //   links: query.links(`/articles`, total),
+    //   articles,
+    // });
+    const users = await UserModel.find();
+    res.send(users);
   } catch (error) {
     next(error);
   }
@@ -27,38 +32,21 @@ usersRouter.get("/", async (req, res, next) => {
 
 usersRouter.get("/:id", async (req, res, next) => {
   try {
-    const article = await UserModel.findById(req.params.id);
-    res.send(article);
+    // const user = await UserModel.findById(req.params.id);
+    const user = await UserModel.find({ firstName: req.params.id });
+    res.send(user);
   } catch (error) {
-    next(error);
+    next(mongoErr(error));
   }
 });
 
-usersRouter.post("/", validateUsers, async (req, res, next) => {
+usersRouter.post("/", async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return next(err(errors.array(), 400));
-    const newPost = new UserModel(req.body, {
-      runValidators: true,
-      new: true,
-    });
-    const { _id } = await newPost.save();
-    res.status(201).send(_id);
-  } catch (error) {
-    next(error);
-  }
-});
-
-usersRouter.post("/:id", validateUsers, async (req, res, next) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return next(err(errors.array(), 400));
-    const updatedArticle = await UserModel.findByIdAndUpdate(
-      req.params.id,
-      { $push: { reviews: req.body } },
-      { runValidators: true, new: true }
-    );
-    const { _id } = await updatedArticle.save();
+    // const errors = validationResult(req);
+    // if (!errors.isEmpty()) return next(err(errors.array(), 400));
+    console.log(req.body);
+    const newUser = new UserModel(req.body);
+    const { _id } = await newUser.save();
     res.status(201).send(_id);
   } catch (error) {
     next(error);
@@ -70,20 +58,19 @@ usersRouter.put("/:id", validateUsers, async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return next(err(errors.array(), 400));
 
-    const article = await UserModel.findByIdAndUpdate(req.params.id, req.body, {
+    const user = await UserModel.findByIdAndUpdate(req.params.id, req.body, {
       runValidators: true,
       new: true,
     });
-    if (!article) return next(err(`${req.params.id} not found`, 404));
-    res.send(article);
+    res.send(user);
   } catch (error) {
-    next(error);
+    next(mongoErr(error));
   }
 });
 
 usersRouter.delete("/:id", async (req, res, next) => {
   try {
-    const article = await UserModel.findByIdAndDelete(req.params.id);
+    const user = await UserModel.findByIdAndDelete(req.params.id);
     res.status(204).send();
   } catch (error) {
     next(error);

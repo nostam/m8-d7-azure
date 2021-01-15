@@ -5,7 +5,7 @@ const UserSchema = new Schema(
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     img: { type: String },
-    articles: [{ _id: Schema.Types.ObjectId }],
+    articles: [{ type: Schema.Types.ObjectId, ref: "articles" }],
   },
   { timestamps: true }
 );

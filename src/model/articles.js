@@ -9,12 +9,9 @@ const ArticleSchema = new Schema(
       name: "string",
       img: "string",
     },
-    author: [{ type: Schema.Types.ObjectId, ref: "users" }],
+    author: { _id: Schema.Types.ObjectId, firstName: String, lastName: String },
     cover: "string",
-    reviews: [
-      { text: { type: String }, user: { type: String } },
-      //{ timestamps: true },
-    ],
+    reviews: [{ text: { type: String }, user: { type: String } }],
   },
   { timestamps: true }
 );
