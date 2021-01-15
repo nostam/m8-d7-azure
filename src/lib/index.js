@@ -6,6 +6,14 @@ const err = (msg, errCode = 500) => {
   return e;
 };
 
+const mongoErr = (error) => {
+  if (error.kind === "ObjectId") {
+    error.httpStatusCode = 404;
+    console.log(error.httpStatusCode, error.message);
+  }
+  return error;
+};
 module.exports = {
   err,
+  mongoErr,
 };
