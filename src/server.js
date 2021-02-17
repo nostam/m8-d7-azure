@@ -5,7 +5,7 @@ const usersRoute = require("./services/users");
 const server = express();
 const port = process.env.PORT || 3001;
 const helmet = require("helmet");
-const listEndpoints = require("express-list-endpoints");
+// const listEndpoints = require("express-list-endpoints");
 const mongoose = require("mongoose");
 const {
   badRequestHandler,
@@ -13,7 +13,7 @@ const {
   unauthorizedHandler,
   forbiddenHandler,
   catchAllHandler,
-} = require("./lib/errorHandling");
+} = require("./middlewares/errorHandling");
 
 const loggerMiddleware = (req, res, next) => {
   console.log(`Logged ${req.url} ${req.method} -- ${new Date()}`);
@@ -22,7 +22,7 @@ const loggerMiddleware = (req, res, next) => {
 
 const whiteList =
   process.env.NODE_ENV === "production"
-    ? [process.env.FE_URL_PROD, process.env.FE_URL_PROD1]
+    ? [process.env.FE_URL_PROD]
     : [process.env.FE_URL_DEV];
 const corsOptions = {
   origin: function (origin, callback) {
@@ -35,7 +35,7 @@ const corsOptions = {
 };
 
 server.use(helmet());
-server.use(cors(corsOptions));
+server.use(cors());
 server.use(express.json());
 server.use(loggerMiddleware);
 
@@ -50,18 +50,19 @@ server.use(catchAllHandler);
 // console.log(listEndpoints(server))
 
 mongoose
-  .connect(process.env.MONGO_CONNECTION, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-  })
-  .then(
+  .connect(
+    process.env.MONGO_CONNECTION,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+      useCreateIndex: true,
+    },
+    { autoIndex: false }
+  )
+  .then(() =>
     server.listen(port, () => {
-      if (process.env.NODE_ENV === "production") {
-        console.log("Running on cloud on port", port);
-      } else {
-        console.log("Running locally on port", port);
-      }
+      console.log("Running on port", port);
     })
   )
   .catch((err) => console.log(err));
