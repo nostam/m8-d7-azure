@@ -3,7 +3,7 @@ const passport = require("passport");
 const usersRouter = express.Router();
 // const { body, validationResult } = require("express-validator");
 const q2m = require("query-to-mongo");
-
+const { APIError } = require("../../utils");
 const UserModel = require("../../models/users");
 const { authorize } = require("../auth/middlewares");
 const { authenticate, refreshToken } = require("../auth");
@@ -46,7 +46,7 @@ usersRouter.post("/register", async (req, res, next) => {
 usersRouter.post("/refreshToken", async (req, res, next) => {
   // const oldRefreshToken = req.body.refreshToken;
   // const oldRefreshToken = req.header("Authorization").replace("Bearer ", ""); // either body or header only (logout route will need to update too in both fe and be)
-  console.log("refresh cookies", req.cookies);
+  console.log("refresh cookies", req.cookies); //null rf undefined
   const oldRefreshToken = req.cookies.refreshToken;
   if (!oldRefreshToken) {
     next(new APIError("Refresh token missing", 400));
