@@ -23,10 +23,11 @@ const loggerMiddleware = (req, res, next) => {
   next();
 };
 
-const whiteList =
-  process.env.NODE_ENV === "production"
-    ? [process.env.FE_URL_PROD]
-    : [process.env.FE_URL_DEV];
+// const whiteList =
+//   process.env.NODE_ENV === "production"
+//     ? [process.env.FE_URL_PROD]
+//     : [process.env.FE_URL_DEV];
+const whiteList = ["http://localhost:3000"];
 const corsOptions = {
   origin: function (origin, callback) {
     if (whiteList.indexOf(origin) !== -1) {
@@ -39,7 +40,9 @@ const corsOptions = {
 };
 
 server.use(helmet());
+//TOFIX CORS
 server.use(cors(corsOptions));
+// server.use(cors({ credentials: true }));
 server.use(express.json());
 server.use(cookieParser());
 server.use(passport.initialize());

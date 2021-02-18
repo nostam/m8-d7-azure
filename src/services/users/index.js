@@ -46,7 +46,7 @@ usersRouter.post("/register", async (req, res, next) => {
 usersRouter.post("/refreshToken", async (req, res, next) => {
   // const oldRefreshToken = req.body.refreshToken;
   // const oldRefreshToken = req.header("Authorization").replace("Bearer ", ""); // either body or header only (logout route will need to update too in both fe and be)
-
+  console.log("refresh cookies", req.cookies);
   const oldRefreshToken = req.cookies.refreshToken;
   if (!oldRefreshToken) {
     next(new APIError("Refresh token missing", 400));
@@ -54,7 +54,10 @@ usersRouter.post("/refreshToken", async (req, res, next) => {
     try {
       //       const newTokens = await refreshToken(oldRefreshToken);
       // res.send(newTokens); // {token, rt}
-      const { accessToken, refreshToken } = await refresh(oldRefreshToken);
+
+      // TOFIX  Cannot access 'refreshToken' before initialization
+      const { accessToken, refreshToken } = await refreshToken(oldRefreshToken);
+      console.log("new gen tokens", rq.users.tokens);
       res.cookie("accessToken", req.user.tokens.accessToken, {
         httpOnly: true,
       });
@@ -122,6 +125,7 @@ usersRouter.get(
 usersRouter
   .route("/me")
   .get(authorize, async (req, res, next) => {
+    console.log("header>", req.headers, "cookies>", req.cookies);
     try {
       res.send(req.user);
     } catch (error) {
