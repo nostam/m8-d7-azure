@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const UserModel = require("../models/users");
-const { APIError } = require("./index");
+const UserModel = require("../../models/users");
+const { APIError } = require("../../utils/index");
 const authenticate = async (user) => {
   try {
     const newAccessToken = await generateJWT({ _id: user._id });

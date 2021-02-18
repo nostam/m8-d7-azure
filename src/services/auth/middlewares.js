@@ -1,6 +1,6 @@
-const UserModel = require("../models/users");
-const { APIError } = require("../utils/index");
-const { verifyJWT } = require("../utils/auth");
+const UserModel = require("../../models/users");
+const { APIError } = require("../../utils/index");
+const { verifyJWT } = require("./index");
 
 const authorize = async (req, res, next) => {
   try {

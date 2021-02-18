@@ -10,10 +10,11 @@ const mongoose = require("mongoose");
 const {
   badRequestHandler,
   notFoundHandler,
-  unauthorizedHandler,
   forbiddenHandler,
   catchAllHandler,
 } = require("./middlewares/errorHandling");
+const passport = require("passport");
+const cookieParser = require("cookie-parser");
 
 const loggerMiddleware = (req, res, next) => {
   console.log(`Logged ${req.url} ${req.method} -- ${new Date()}`);
@@ -29,7 +30,7 @@ const corsOptions = {
     if (whiteList.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error("NOT ALLOWED - CORS ISSUES"));
+      callback(new Error("Not allowed by CORS"));
     }
   },
 };
@@ -37,13 +38,15 @@ const corsOptions = {
 server.use(helmet());
 server.use(cors());
 server.use(express.json());
+server.use(cookieParser());
+server.use(passport.initialize());
+
 server.use(loggerMiddleware);
 
 server.use("/articles", articlesRoute);
 server.use("/users", usersRoute);
 server.use(badRequestHandler);
 server.use(notFoundHandler);
-server.use(unauthorizedHandler);
 server.use(forbiddenHandler);
 server.use(catchAllHandler);
 

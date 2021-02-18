@@ -12,13 +12,6 @@ const notFoundHandler = (err, req, res, next) => {
   next(err);
 };
 
-const unauthorizedHandler = (err, req, res, next) => {
-  if (err.httpStatusCode === 401) {
-    res.status(401).send({ error: err.message || "Unauthorized" });
-  }
-  next(err);
-};
-
 const forbiddenHandler = (err, req, res, next) => {
   if (err.httpStatusCode === 403) {
     res.status(403).send({ error: err.message || "Forbidden" });
@@ -37,7 +30,6 @@ const catchAllHandler = (err, req, res, next) => {
 
 module.exports = {
   notFoundHandler,
-  unauthorizedHandler,
   forbiddenHandler,
   catchAllHandler,
   badRequestHandler,

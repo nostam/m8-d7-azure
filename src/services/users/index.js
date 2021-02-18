@@ -4,8 +4,8 @@ const usersRouter = express.Router();
 const q2m = require("query-to-mongo");
 
 const UserModel = require("../../models/users");
-const { authorize } = require("../../middlewares/auth");
-const { authenticate, refreshToken } = require("../../utils/auth");
+const { authorize } = require("../auth/middlewares");
+const { authenticate, refreshToken } = require("../auth");
 // const validateUsers = [
 //   body("firstName").isString(),
 //   body("lastName").isString(),
