@@ -4,7 +4,8 @@ const { verifyJWT } = require("./index");
 
 const authorize = async (req, res, next) => {
   try {
-    const token = req.header("Authorization").replace("Bearer ", "");
+    // const token = req.header("Authorization").replace("Bearer ", "");
+    const token = req.cookies.accessToken;
     const decoded = await verifyJWT(token);
     const user = await UserModel.findOne({
       _id: decoded._id,

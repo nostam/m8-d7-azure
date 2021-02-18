@@ -13,8 +13,10 @@ const {
   forbiddenHandler,
   catchAllHandler,
 } = require("./middlewares/errorHandling");
+
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
+const oauth = require("./services/auth/oauth");
 
 const loggerMiddleware = (req, res, next) => {
   console.log(`Logged ${req.url} ${req.method} -- ${new Date()}`);
@@ -33,10 +35,11 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
+  credentials: true,
 };
 
 server.use(helmet());
-server.use(cors());
+server.use(cors(corsOptions));
 server.use(express.json());
 server.use(cookieParser());
 server.use(passport.initialize());

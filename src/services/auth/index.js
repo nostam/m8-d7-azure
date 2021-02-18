@@ -1,14 +1,16 @@
 const jwt = require("jsonwebtoken");
 const UserModel = require("../../models/users");
 const { APIError } = require("../../utils/index");
+
 const authenticate = async (user) => {
   try {
-    const newAccessToken = await generateJWT({ _id: user._id });
-    const newRefreshToken = await generateRefreshJWT({ _id: user._id });
-    user.refreshTokens = user.refreshTokens.concat({ token: newRefreshToken });
+    const accessToken = await generateJWT({ _id: user._id });
+    const refreshToken = await generateRefreshJWT({ _id: user._id });
+    user.refreshTokens = user.refreshTokens.concat({ token: refreshToken });
     await user.save();
 
-    return { token: newAccessToken, refreshToken: newRefreshToken };
+    // return { token: newAccessToken, refreshToken: newRefreshToken };
+    return { accessToken, refreshToken };
   } catch (error) {
     throw new Error(error);
   }

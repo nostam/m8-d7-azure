@@ -23,7 +23,7 @@ const UserSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, "User password required"],
+      // required: [true, "User password required"],
       minlength: [10, "Password requires minimum 10 characters"],
     },
     role: {
@@ -39,6 +39,7 @@ const UserSchema = new Schema(
         },
       },
     ],
+    googleId: String,
   },
   { timestamps: true }
 );

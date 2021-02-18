@@ -1,4 +1,5 @@
 const express = require("express");
+const passport = require("passport");
 const usersRouter = express.Router();
 // const { body, validationResult } = require("express-validator");
 const q2m = require("query-to-mongo");
@@ -15,8 +16,18 @@ usersRouter.post("/login", async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const user = await UserModel.findByCredentials(username, password);
-    const token = await authenticate(user);
-    res.status(201).send(token);
+    // const token = await authenticate(user);
+
+    const { accessToken, refreshToken } = await authenticate(user);
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      path: "/",
+    });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      path: "/users/refreshToken",
+    });
+    res.status(201).send("Welcome back");
   } catch (error) {
     next(error);
   }
@@ -33,14 +44,25 @@ usersRouter.post("/register", async (req, res, next) => {
 });
 
 usersRouter.post("/refreshToken", async (req, res, next) => {
-  const oldRefreshToken = req.body.refreshToken;
-  // const oldRefreshToken = req.header("Authorization").replace("Bearer ", "");
+  // const oldRefreshToken = req.body.refreshToken;
+  // const oldRefreshToken = req.header("Authorization").replace("Bearer ", ""); // either body or header only (logout route will need to update too in both fe and be)
+
+  const oldRefreshToken = req.cookies.refreshToken;
   if (!oldRefreshToken) {
     next(new APIError("Refresh token missing", 400));
   } else {
     try {
-      const newTokens = await refreshToken(oldRefreshToken);
-      res.send(newTokens);
+      //       const newTokens = await refreshToken(oldRefreshToken);
+      // res.send(newTokens); // {token, rt}
+      const { accessToken, refreshToken } = await refresh(oldRefreshToken);
+      res.cookie("accessToken", req.user.tokens.accessToken, {
+        httpOnly: true,
+      });
+      res.cookie("refreshToken", req.user.tokens.refreshToken, {
+        httpOnly: true,
+        path: "/users/refreshToken",
+      });
+      res.send("renewed");
     } catch (error) {
       console.log(error);
       const err = new Error(error);
@@ -52,12 +74,6 @@ usersRouter.post("/refreshToken", async (req, res, next) => {
 
 usersRouter.post("/logout", authorize, async (req, res, next) => {
   try {
-    console.log(
-      "user route",
-      req.user.refreshTokens,
-      "body",
-      req.body.refreshToken
-    );
     req.user.refreshTokens = req.user.refreshTokens.filter(
       (t) => t.token !== req.body.refreshToken
     );
@@ -77,6 +93,32 @@ usersRouter.post("/logoutAll", authorize, async (req, res, next) => {
     next(err);
   }
 });
+
+usersRouter.get(
+  "/googleLogin",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+usersRouter.get(
+  "/googleRedirect",
+  passport.authenticate("google"),
+  async (req, res, next) => {
+    try {
+      res.cookie("accessToken", req.user.tokens.accessToken, {
+        httpOnly: true,
+      });
+      res.cookie("refreshToken", req.user.tokens.refreshToken, {
+        httpOnly: true,
+        path: "/users/refreshToken",
+      });
+
+      res.redirect(`${process.env.FE_URL_PROD}`);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 usersRouter
   .route("/me")
   .get(authorize, async (req, res, next) => {
