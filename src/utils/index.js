@@ -6,4 +6,16 @@ class APIError extends Error {
     this.isOperational = operational;
   }
 }
-module.exports = { APIError };
+
+const accessTokenOptions = {
+  httpOnly: true,
+  path: "/",
+  overwrite: true,
+};
+
+const refreshTokenOptions = {
+  httpOnly: true,
+  path: "/users/refreshToken",
+  overwrite: true,
+};
+module.exports = { APIError, accessTokenOptions, refreshTokenOptions };

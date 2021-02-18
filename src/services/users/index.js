@@ -3,10 +3,15 @@ const passport = require("passport");
 const usersRouter = express.Router();
 // const { body, validationResult } = require("express-validator");
 const q2m = require("query-to-mongo");
-const { APIError } = require("../../utils");
+const {
+  APIError,
+  accessTokenOptions,
+  refreshTokenOptions,
+} = require("../../utils");
 const UserModel = require("../../models/users");
 const { authorize } = require("../auth/middlewares");
 const { authenticate, refreshToken } = require("../auth");
+
 // const validateUsers = [
 //   body("firstName").isString(),
 //   body("lastName").isString(),
@@ -19,14 +24,8 @@ usersRouter.post("/login", async (req, res, next) => {
     // const token = await authenticate(user);
 
     const { accessToken, refreshToken } = await authenticate(user);
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      path: "/",
-    });
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      path: "/users/refreshToken",
-    });
+    res.cookie("accessToken", accessToken, accessTokenOptions);
+    res.cookie("refreshToken", refreshToken, refreshTokenOptions);
     res.status(201).send("Welcome back");
   } catch (error) {
     next(error);
@@ -57,13 +56,8 @@ usersRouter.post("/refreshToken", async (req, res, next) => {
       const { accessToken, refreshToken } = await refreshToken(oldRefreshToken);
 
       console.log("new gen tokens", req.users.tokens);
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-      });
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        path: "/users/refreshToken",
-      });
+      res.cookie("accessToken", accessToken, accessTokenOptions);
+      res.cookie("refreshToken", refreshToken, refreshTokenOptions);
       res.send("renewed");
     } catch (error) {
       console.log(error);
@@ -80,6 +74,9 @@ usersRouter.post("/logout", authorize, async (req, res, next) => {
       (t) => t.token !== req.cookies.refreshTokens
     );
     await req.user.save();
+    //TODO update domain options for deployment
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken"); // rm failed
     res.send();
   } catch (err) {
     next(err);
@@ -88,8 +85,12 @@ usersRouter.post("/logout", authorize, async (req, res, next) => {
 
 usersRouter.post("/logoutAll", authorize, async (req, res, next) => {
   try {
+    console.log(req.user);
     req.user.refreshTokens = [];
     await req.user.save();
+    //TODO update domain options for deployment
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken"); // rm failed
     res.send();
   } catch (err) {
     next(err);
@@ -106,13 +107,16 @@ usersRouter.get(
   passport.authenticate("google"),
   async (req, res, next) => {
     try {
-      res.cookie("accessToken", req.user.tokens.accessToken, {
-        httpOnly: true,
-      });
-      res.cookie("refreshToken", req.user.tokens.refreshToken, {
-        httpOnly: true,
-        path: "/users/refreshToken",
-      });
+      res.cookie(
+        "accessToken",
+        req.user.tokens.accessToken,
+        accessTokenOptions
+      );
+      res.cookie(
+        "refreshToken",
+        req.user.tokens.refreshToken,
+        refreshTokenOptions
+      );
 
       res.redirect(`${process.env.FE_URL_PROD}`);
     } catch (error) {

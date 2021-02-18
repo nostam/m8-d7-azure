@@ -25,8 +25,8 @@ const loggerMiddleware = (req, res, next) => {
 
 const whiteList =
   process.env.NODE_ENV === "production"
-    ? [process.env.FE_URL_PROD]
-    : [process.env.FE_URL_DEV];
+    ? process.env.FE_URL_PROD
+    : process.env.FE_URL_DEV;
 const corsOptions = {
   origin: function (origin, callback) {
     if (whiteList.indexOf(origin) !== -1) {
@@ -40,8 +40,8 @@ const corsOptions = {
 
 server.use(helmet());
 //TOFIX CORS
-// server.use(cors(corsOptions));
-server.use(cors({ credentials: true, origin: process.env.FE_URL_PROD }));
+server.use(cors(corsOptions));
+// server.use(cors({ credentials: true, origin: process.env.FE_URL_PROD }));
 server.use(express.json());
 server.use(cookieParser());
 server.use(passport.initialize());
