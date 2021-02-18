@@ -64,7 +64,6 @@ const refreshToken = async (oldRefreshToken) => {
   const currentRefreshToken = user.refreshTokens.find(
     (t) => t.token === oldRefreshToken
   );
-
   if (!currentRefreshToken) throw new APIError(`Refresh token is wrong`, 400);
 
   const newAccessToken = await generateJWT({ _id: user._id });

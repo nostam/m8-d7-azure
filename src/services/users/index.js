@@ -52,6 +52,12 @@ usersRouter.post("/refreshToken", async (req, res, next) => {
 
 usersRouter.post("/logout", authorize, async (req, res, next) => {
   try {
+    console.log(
+      "user route",
+      req.user.refreshTokens,
+      "body",
+      req.body.refreshToken
+    );
     req.user.refreshTokens = req.user.refreshTokens.filter(
       (t) => t.token !== req.body.refreshToken
     );
