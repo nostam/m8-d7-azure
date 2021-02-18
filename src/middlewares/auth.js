@@ -1,4 +1,4 @@
-const Users = require("../models/users");
+const UserModel = require("../models/users");
 const { APIError } = require("../utils/index");
 const { verifyJWT } = require("../utils/auth");
 
@@ -22,7 +22,7 @@ const adminOnlyMiddleware = async (req, res, next) => {
   if (req.user && req.user.role === "admin") {
     next();
   } else {
-    next(new APIError("Admin Only!", 403));
+    next(new APIError("Unauthorized ", 403));
   }
 };
 

@@ -1,5 +1,5 @@
 {
-  "name": "m8-d3-medium-jwt-backend",
+  "name": "m8-d4-medium-oauth-backend",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nostam/m8-d3-medium-jwt-backend.git"
+    "url": "git+https://github.com/nostam/m8-d4-medium-oauth-backend.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nostam/m8-d3-medium-jwt-backend/issues"
+    "url": "https://github.com/nostam/m8-d4-medium-oauth-backend/issues"
   },
-  "homepage": "https://github.com/nostam/m8-d3-medium-jwt-backend#readme",
+  "homepage": "https://github.com/nostam/m8-d4-medium-oauth-backend#readme",
   "dependencies": {
     "atob": "^2.1.2",
     "bcryptjs": "^2.4.3",

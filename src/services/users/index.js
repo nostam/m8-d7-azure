@@ -32,6 +32,46 @@ usersRouter.post("/register", async (req, res, next) => {
   }
 });
 
+usersRouter.post("/refreshToken", async (req, res, next) => {
+  const oldRefreshToken = req.body.refreshToken;
+  console.log(req.body);
+  // const oldRefreshToken = req.header("Authorization").replace("Bearer ", "");
+  if (!oldRefreshToken) {
+    next(new APIError("Refresh token missing", 400));
+  } else {
+    try {
+      const newTokens = await refreshToken(oldRefreshToken);
+      res.send(newTokens);
+    } catch (error) {
+      console.log(error);
+      const err = new Error(error);
+      err.httpStatusCode = 403;
+      next(err);
+    }
+  }
+});
+
+usersRouter.post("/logout", authorize, async (req, res, next) => {
+  try {
+    req.user.refreshTokens = req.user.refreshTokens.filter(
+      (t) => t.token !== req.body.refreshToken
+    );
+    await req.user.save();
+    res.send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+usersRouter.post("/logoutAll", authorize, async (req, res, next) => {
+  try {
+    req.user.refreshTokens = [];
+    await req.user.save();
+    res.send();
+  } catch (err) {
+    next(err);
+  }
+});
 usersRouter
   .route("/me")
   .get(authorize, async (req, res, next) => {
