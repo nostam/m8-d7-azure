@@ -40,8 +40,8 @@ const corsOptions = {
 
 server.use(helmet());
 //TOFIX CORS
-server.use(cors(corsOptions));
-// server.use(cors({ credentials: true, origin: process.env.FE_URL_PROD }));
+// server.use(cors(corsOptions));
+server.use(cors({ credentials: true, origin: process.env.FE_URL_PROD }));
 server.use(express.json());
 server.use(cookieParser());
 server.use(passport.initialize());
