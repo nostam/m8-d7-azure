@@ -68,18 +68,18 @@ const refreshToken = async (oldRefreshToken) => {
   );
   if (!currentRefreshToken) throw new APIError(`Refresh token is wrong`, 400);
 
-  const newAccessToken = await generateJWT({ _id: user._id });
-  const newRefreshToken = await generateRefreshJWT({ _id: user._id });
+  const accessToken = await generateJWT({ _id: user._id });
+  const refreshToken = await generateRefreshJWT({ _id: user._id });
 
   const newRefreshTokens = user.refreshTokens
     .filter((t) => t.token !== oldRefreshToken)
-    .concat({ token: newRefreshToken });
+    .concat({ token: refreshToken });
 
   user.refreshTokens = [...newRefreshTokens];
 
   await user.save();
 
-  return { token: newAccessToken, refreshToken: newRefreshToken };
+  return { accessToken, refreshToken };
 };
 
 module.exports = { authenticate, verifyJWT, refreshToken };
