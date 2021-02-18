@@ -23,11 +23,10 @@ const loggerMiddleware = (req, res, next) => {
   next();
 };
 
-// const whiteList =
-//   process.env.NODE_ENV === "production"
-//     ? [process.env.FE_URL_PROD]
-//     : [process.env.FE_URL_DEV];
-const whiteList = ["http://localhost:3000"];
+const whiteList =
+  process.env.NODE_ENV === "production"
+    ? [process.env.FE_URL_PROD]
+    : [process.env.FE_URL_DEV];
 const corsOptions = {
   origin: function (origin, callback) {
     if (whiteList.indexOf(origin) !== -1) {
