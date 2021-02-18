@@ -34,7 +34,6 @@ usersRouter.post("/register", async (req, res, next) => {
 
 usersRouter.post("/refreshToken", async (req, res, next) => {
   const oldRefreshToken = req.body.refreshToken;
-  console.log(req.body);
   // const oldRefreshToken = req.header("Authorization").replace("Bearer ", "");
   if (!oldRefreshToken) {
     next(new APIError("Refresh token missing", 400));
